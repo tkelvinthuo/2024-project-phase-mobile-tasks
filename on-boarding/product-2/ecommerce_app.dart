@@ -1,85 +1,122 @@
 import 'dart:io';
 
-// Represents a single product
 class Product {
-  String name;
-  String description;
-  double price;
+  String _name;
+  String _description;
+  double _price;
 
+  // Constructor
   Product({
-    required this.name,
-    required this.description,
-    required this.price,
-  });
+    required String name,
+    required String description,
+    required double price,
+  })  : _name = name,
+        _description = description,
+        _price = price;
+
+  // --- Getters ---
+  String get name => _name;
+  String get description => _description;
+  double get price => _price;
+
+  set name(String value) {
+    if (value.isNotEmpty) {
+      _name = value;
+    } else {
+      print('Name cannot be empty.');
+    }
+  }
+
+  set description(String value) {
+    if (value.isNotEmpty) {
+      _description = value;
+    } else {
+      print('Description cannot be empty.');
+    }
+  }
+
+  set price(double value) {
+    if (value >= 0) {
+      _price = value;
+    } else {
+      print('Price must be positive.');
+    }
+  }
 
   void display() {
-    print('Name: $name');
-    print('Description: $description');
-    print('Price: \$${price.toStringAsFixed(2)}');
+    print('Name: $_name');
+    print('Description: $_description');
+    print('Price: \$${_price.toStringAsFixed(2)}');
   }
 }
 
-// Manages a list of products (CRUD operations)
 class ProductManager {
   final List<Product> _products = [];
 
+  // Add new product
   void addProduct(Product product) {
     _products.add(product);
-    print('\n✅ Product "${product.name}" added successfully!\n');
+    print('\nProduct "${product.name}" added successfully!\n');
   }
 
+  // View all products
   void viewAllProducts() {
     if (_products.isEmpty) {
-      print('\n⚠️ No products found.\n');
+      print('\nNo products available.\n');
       return;
     }
-    print('\n🛍️ Product List:');
+
+    print('\nProduct List:');
     for (int i = 0; i < _products.length; i++) {
       print('\nProduct #${i + 1}');
       _products[i].display();
     }
   }
 
+  // View single product
   void viewProduct(int index) {
-    if (index < 0 || index >= _products.length) {
-      print('\n⚠️ Invalid product index.\n');
-      return;
-    }
+    if (_isInvalidIndex(index)) return;
     print('\n🔍 Product Details:');
     _products[index].display();
   }
 
+  // Edit product
   void editProduct(int index, {String? name, String? description, double? price}) {
-    if (index < 0 || index >= _products.length) {
-      print('\n⚠️ Invalid product index.\n');
-      return;
-    }
+    if (_isInvalidIndex(index)) return;
     final product = _products[index];
-    if (name != null) product.name = name;
-    if (description != null) product.description = description;
+
+    if (name != null && name.isNotEmpty) product.name = name;
+    if (description != null && description.isNotEmpty) product.description = description;
     if (price != null) product.price = price;
 
-    print('\n✏️ Product updated successfully!\n');
+    print('\nProduct updated successfully!\n');
   }
 
+  // Delete product
   void deleteProduct(int index) {
-    if (index < 0 || index >= _products.length) {
-      print('\n⚠️ Invalid product index.\n');
-      return;
-    }
+    if (_isInvalidIndex(index)) return;
     final removed = _products.removeAt(index);
-    print('\n🗑️ Product "${removed.name}" deleted successfully!\n');
+    print('\nProduct "${removed.name}" deleted successfully!\n');
+  }
+
+  // Private helper to handle invalid indices
+  bool _isInvalidIndex(int index) {
+    if (index < 0 || index >= _products.length) {
+      print('\nInvalid product index.\n');
+      return true;
+    }
+    return false;
   }
 }
 
-// Main function with CLI interface
+
 void main() {
   final manager = ProductManager();
 
   while (true) {
     print('''
 ============================
-🛒 Dart eCommerce Application
+Dart eCommerce Application
 ============================
 1. Add Product
 2. View All Products
@@ -103,7 +140,12 @@ Enter your choice:
 
         stdout.write('Enter price: ');
         final priceInput = stdin.readLineSync();
-        final price = double.tryParse(priceInput ?? '') ?? 0.0;
+        final price = double.tryParse(priceInput ?? '') ?? -1;
+
+        if (price < 0) {
+          print('\nInvalid price entered.\n');
+          break;
+        }
 
         manager.addProduct(Product(name: name, description: description, price: price));
         break;
@@ -137,8 +179,8 @@ Enter your choice:
 
         manager.editProduct(
           editIndex - 1,
-          name: newName!.isEmpty ? null : newName,
-          description: newDescription!.isEmpty ? null : newDescription,
+          name: (newName != null && newName.isNotEmpty) ? newName : null,
+          description: (newDescription != null && newDescription.isNotEmpty) ? newDescription : null,
           price: newPrice,
         );
         break;
@@ -151,11 +193,11 @@ Enter your choice:
         break;
 
       case '6':
-        print('\n👋 Exiting application. Goodbye!\n');
+        print('\nExiting application. Goodbye!\n');
         return;
 
       default:
-        print('\n⚠️ Invalid choice. Please try again.\n');
+        print('\nInvalid choice. Please try again.\n');
     }
   }
 }
